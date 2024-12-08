@@ -58,29 +58,31 @@ pipeline {
         success {
             script {
                 echo 'Pipeline execution successful!'
-                try {
-                    slackSend(
-                        channel: '#your-slack-channel', 
-                        color: "good", 
-                        message: "Pipeline réussi ! Image déployée : ${registry}:${BUILD_NUMBER} :tada:"
-                    )
-                } catch (Exception e) {
-                    echo "Notification Slack échouée : ${e.message}"
-                }
+                // Notification Slack supprimée
+                // try {
+                //     slackSend(
+                //         channel: '#your-slack-channel', 
+                //         color: "good", 
+                //         message: "Pipeline réussi ! Image déployée : ${registry}:${BUILD_NUMBER} :tada:"
+                //     )
+                // } catch (Exception e) {
+                //     echo "Notification Slack échouée : ${e.message}"
+                // }
             }
         }
         failure {
             script {
                 echo 'Pipeline execution failed.'
-                try {
-                    slackSend(
-                        channel: '#your-slack-channel', 
-                        color: "danger", 
-                        message: "Échec de la pipeline. Veuillez vérifier :cry:"
-                    )
-                } catch (Exception e) {
-                    echo "Notification Slack échouée : ${e.message}"
-                }
+                // Notification Slack supprimée
+                // try {
+                //     slackSend(
+                //         channel: '#your-slack-channel', 
+                //         color: "danger", 
+                //         message: "Échec de la pipeline. Veuillez vérifier :cry:"
+                //     )
+                // } catch (Exception e) {
+                //     echo "Notification Slack échouée : ${e.message}"
+                // }
             }
         }
     }
