@@ -25,50 +25,63 @@ pipeline {
             }
         }
        
-        stage('Build image') {
-          steps {
-              script {
-                dockerImage = docker.build registry + ":$BUILD_NUMBER"
-              }
-          }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${registry}:${BUILD_NUMBER}")
+                }
+            }
         }      
 
-        stage('Deploy Docker container') {
-          steps {
-            script {
-                // Vérifier si un conteneur avec le même nom existe
-                def existingContainer = sh(script: "docker ps -a -q -f name=${CONTAINER_NAME}", returnStdout: true).trim()
+        stage('Deploy Docker Container') {
+            steps {
+                script {
+                    // Vérifier si un conteneur avec le même nom existe
+                    def existingContainer = sh(script: "docker ps -a -q -f name=${CONTAINER_NAME}", returnStdout: true).trim()
 
-                // Si un conteneur est trouvé, on l'arrête et on le supprime
-                if (existingContainer) {
-                    echo "Conteneur existant trouvé : ${existingContainer}. Arrêt et suppression en cours..."
-                    sh "docker stop ${existingContainer}"
-                    sh "docker rm ${existingContainer}"
+                    // Si un conteneur est trouvé, on l'arrête et on le supprime
+                    if (existingContainer) {
+                        echo "Conteneur existant trouvé : ${existingContainer}. Arrêt et suppression en cours..."
+                        sh "docker stop ${existingContainer}"
+                        sh "docker rm ${existingContainer}"
+                    }
+
+                    // Lancer le nouveau conteneur
+                    echo "Lancement du nouveau conteneur Docker..."
+                    sh "docker run --name ${CONTAINER_NAME} -d -p 2222:2222 ${registry}:${BUILD_NUMBER}"
                 }
-
-                // Lancer le nouveau conteneur
-                echo "Lancement du nouveau conteneur Docker..."
-                sh "docker run --name ${CONTAINER_NAME} -d -p 2222:2222 ${registry}:${BUILD_NUMBER}"
-
-                // Envoi du message Slack pour indiquer le succès du déploiement
-                slackSend color: "good", message: "${registry}:${BUILD_NUMBER} - Image successfully created and deployed! :man_dancing:"
             }
-          }
         }
-
     }
 
     post {
         success {
-            echo 'Pipeline execution successful!'
-            slackSend color: "good", message: "Pipeline execution successful! :man_dancing:"
+            script {
+                echo 'Pipeline execution successful!'
+                try {
+                    slackSend(
+                        channel: '#your-slack-channel', 
+                        color: "good", 
+                        message: "Pipeline réussi ! Image déployée : ${registry}:${BUILD_NUMBER} :tada:"
+                    )
+                } catch (Exception e) {
+                    echo "Notification Slack échouée : ${e.message}"
+                }
+            }
         }
         failure {
-            echo 'Pipeline execution failed.'
-            slackSend color: "danger", message: "Pipeline execution failed! :ghost:"
+            script {
+                echo 'Pipeline execution failed.'
+                try {
+                    slackSend(
+                        channel: '#your-slack-channel', 
+                        color: "danger", 
+                        message: "Échec de la pipeline. Veuillez vérifier :cry:"
+                    )
+                } catch (Exception e) {
+                    echo "Notification Slack échouée : ${e.message}"
+                }
+            }
         }
     }
 }
-        
-
-      
